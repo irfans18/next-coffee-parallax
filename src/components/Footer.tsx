@@ -128,7 +128,7 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="mt-16 pt-8 border-t border-coffee-800/20 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-xs text-coffee-500/50">
-            © {new Date().getFullYear()} Artcofie. All rights reserved.
+            © {new Date().getFullYear()} Artcofie. All rights reserved. By rfms
           </p>
           <div className="flex gap-6">
             {["Privacy", "Terms", "Cookies"].map((item) => (
