@@ -89,3 +89,14 @@ html {
 canvas {
   display: block;
 }
+
+/* Hide custom scrollbar on small screens */
+@media (max-width: 768px) {
+  ::-webkit-scrollbar {
+    display: none;
+  }
+
+  html {
+    scrollbar-width: none;
+  }
+}

@@ -74,9 +74,14 @@ export const acehGayoProduct: CoffeeProduct = {
 
 export const TOTAL_FRAMES = 142;
 export const IMAGE_PATH_PREFIX = "/images/aceh-gayo/frame_";
+export const PX_IMAGE_PATH_PREFIX = "/images/px-aceh-gayo/frame_";
 export const IMAGE_EXTENSION = ".webp";
 
-export function getFramePath(index: number): string {
+export function getFramePath(
+  index: number,
+  isSmallScreen: boolean = false
+): string {
+  const prefix = isSmallScreen ? PX_IMAGE_PATH_PREFIX : IMAGE_PATH_PREFIX;
   const padded = String(index).padStart(4, "0");
-  return `${IMAGE_PATH_PREFIX}${padded}${IMAGE_EXTENSION}`;
+  return `${prefix}${padded}${IMAGE_EXTENSION}`;
 }

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import { useScroll, useTransform, useMotionValueEvent } from "motion/react";
 import { TOTAL_FRAMES, getFramePath } from "@/lib/product";
+import useScreenSize from "@/hooks/useScreenSize";
 
 interface ProductBottleScrollProps {
   onProgressChange?: (progress: number) => void;
@@ -19,6 +20,9 @@ export default function ProductBottleScroll({
   const rafRef = useRef<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadProgress, setLoadProgress] = useState(0);
+  const prevSmallScreenRef = useRef<boolean | null>(null);
+
+  const { isSmallScreen } = useScreenSize();
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -31,13 +35,67 @@ export default function ProductBottleScroll({
     [0, TOTAL_FRAMES - 1]
   );
 
-  // Preload all images
+  const renderFrame = useCallback(
+    (index: number) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      const img = imagesRef.current[index];
+      if (!img || !img.complete || !img.naturalWidth) return;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const imgRatio = img.naturalWidth / img.naturalHeight;
+      const canvasRatio = canvas.width / canvas.height;
+
+      let drawWidth: number;
+      let drawHeight: number;
+
+      if (isSmallScreen) {
+        // Cover mode for small screens — fill viewport, crop edges
+        if (canvasRatio > imgRatio) {
+          drawWidth = canvas.width;
+          drawHeight = drawWidth / imgRatio;
+        } else {
+          drawHeight = canvas.height;
+          drawWidth = drawHeight * imgRatio;
+        }
+      } else {
+        // Contain mode for desktop
+        if (canvasRatio > imgRatio) {
+          drawHeight = canvas.height;
+          drawWidth = drawHeight * imgRatio;
+        } else {
+          drawWidth = canvas.width;
+          drawHeight = drawWidth / imgRatio;
+        }
+      }
+
+      const x = (canvas.width - drawWidth) / 2;
+      const y = (canvas.height - drawHeight) / 2;
+
+      ctx.drawImage(img, x, y, drawWidth, drawHeight);
+    },
+    [isSmallScreen]
+  );
+
+  // Preload images — re-run when screen size category changes
   useEffect(() => {
+    // Only reload if the screen size category actually changed
+    if (prevSmallScreenRef.current === isSmallScreen) return;
+    prevSmallScreenRef.current = isSmallScreen;
+
+    loadedCountRef.current = 0;
+    setIsLoading(true);
+    setLoadProgress(0);
+
     const images: HTMLImageElement[] = [];
 
     for (let i = 0; i < TOTAL_FRAMES; i++) {
       const img = new Image();
-      img.src = getFramePath(i);
+      img.src = getFramePath(i, isSmallScreen);
       img.onload = () => {
         loadedCountRef.current++;
         setLoadProgress(
@@ -65,7 +123,7 @@ export default function ProductBottleScroll({
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, []);
+  }, [isSmallScreen, renderFrame]);
 
   // Resize canvas
   useEffect(() => {
@@ -80,41 +138,7 @@ export default function ProductBottleScroll({
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  const renderFrame = useCallback((index: number) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const img = imagesRef.current[index];
-    if (!img || !img.complete || !img.naturalWidth) return;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Contain the image
-    const imgRatio = img.naturalWidth / img.naturalHeight;
-    const canvasRatio = canvas.width / canvas.height;
-
-    let drawWidth: number;
-    let drawHeight: number;
-
-    if (canvasRatio > imgRatio) {
-      // Canvas is wider — fit by height
-      drawHeight = canvas.height;
-      drawWidth = drawHeight * imgRatio;
-    } else {
-      // Canvas is taller — fit by width
-      drawWidth = canvas.width;
-      drawHeight = drawWidth / imgRatio;
-    }
-
-    const x = (canvas.width - drawWidth) / 2;
-    const y = (canvas.height - drawHeight) / 2;
-
-    ctx.drawImage(img, x, y, drawWidth, drawHeight);
-  }, []);
+  }, [renderFrame]);
 
   // Listen to scroll-linked frame changes
   useMotionValueEvent(frameIndex, "change", (latest) => {
@@ -144,8 +168,9 @@ export default function ProductBottleScroll({
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
-            background:
-              "linear-gradient(to right, rgba(26,14,10,0.7) 0%, rgba(26,14,10,0) 40%, rgba(26,14,10,0) 60%, rgba(26,14,10,0.7) 100%)",
+            background: isSmallScreen
+              ? "linear-gradient(to bottom, rgba(26,14,10,0.6) 0%, rgba(26,14,10,0.1) 30%, rgba(26,14,10,0.1) 60%, rgba(26,14,10,0.7) 100%)"
+              : "linear-gradient(to right, rgba(26,14,10,0.7) 0%, rgba(26,14,10,0) 40%, rgba(26,14,10,0) 60%, rgba(26,14,10,0.7) 100%)",
           }}
         />
         <div

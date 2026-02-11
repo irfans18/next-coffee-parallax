@@ -27,8 +27,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${outfit.variable} antialiased`}>
-      <SpeedInsights/>
       <body>{children}</body>
+      <SpeedInsights/>
     </html>
   );
 }

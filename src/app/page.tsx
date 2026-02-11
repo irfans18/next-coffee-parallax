@@ -159,16 +159,16 @@ export default function Home() {
                 <p className="text-xs tracking-[0.3em] uppercase text-gold-500 mb-4">
                   Own the Origin
                 </p>
-                <h2 className="text-4xl md:text-6xl font-bold text-coffee-50 mb-3">
+                <h2 className="text-3xl sm:text-4xl md:text-6xl font-bold text-coffee-50 mb-3">
                   {acehGayoProduct.name}
                 </h2>
-                <p className="text-coffee-300/60 mb-12">
+                <p className="text-sm sm:text-base text-coffee-300/60 mb-8 sm:mb-12">
                   {acehGayoProduct.weight} · Single Origin · {acehGayoProduct.process}
                 </p>
                 {/* Price */}
-                <div className="mb-12">
+                <div className="mb-8 sm:mb-12">
                   <span
-                    className="text-5xl md:text-7xl font-bold"
+                    className="text-4xl sm:text-5xl md:text-7xl font-bold"
                     style={{
                       background:
                         "linear-gradient(135deg, #e0ca7a 0%, #c9a84c 40%, #d4a054 100%)",
@@ -181,14 +181,14 @@ export default function Home() {
                   </span>
                 </div>
                 {/* Quantity selector */}
-                <div className="flex items-center justify-center gap-6 mb-12">
+                <div className="flex items-center justify-center gap-4 sm:gap-6 mb-8 sm:mb-12">
                   <QuantitySelector />
                 </div>
                 {/* Add to Cart */}
                 <motion.button
                   whileHover={{ scale: 1.03, y: -2 }}
                   whileTap={{ scale: 0.98 }}
-                  className="px-16 py-5 rounded-full text-lg font-bold tracking-wide uppercase transition-all duration-500 cursor-pointer"
+                  className="px-10 sm:px-16 py-4 sm:py-5 rounded-full text-base sm:text-lg font-bold tracking-wide uppercase transition-all duration-500 cursor-pointer"
                   style={{
                     background:
                       "linear-gradient(135deg, #c9a84c 0%, #d4a054 50%, #c9a84c 100%)",
@@ -301,17 +301,17 @@ function NavigationPills({ currentIndex }: { currentIndex: number }) {
   const labels = ["Gayo"];
 
   return (
-    <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-40">
+    <div className="fixed bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 z-40">
       <motion.div
         initial={{ y: 50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 1.5, duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
-        className="flex items-center gap-2 bg-coffee-900/60 backdrop-blur-xl border border-coffee-700/20 rounded-full px-4 py-2"
+        className="flex items-center gap-1.5 sm:gap-2 bg-coffee-900/60 backdrop-blur-xl border border-coffee-700/20 rounded-full px-3 sm:px-4 py-1.5 sm:py-2"
       >
         {labels.map((label, i) => (
           <button
             key={label}
-            className={`px-4 py-1.5 rounded-full text-xs tracking-wide uppercase transition-all duration-500 cursor-pointer ${
+            className={`px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs tracking-wide uppercase transition-all duration-500 cursor-pointer ${
               i === currentIndex
                 ? "text-coffee-900 font-semibold"
                 : "text-coffee-300/50 hover:text-coffee-200"
@@ -328,8 +328,8 @@ function NavigationPills({ currentIndex }: { currentIndex: number }) {
             {label}
           </button>
         ))}
-        <div className="w-px h-4 bg-coffee-700/30 mx-1" />
-        <span className="text-[10px] tracking-[0.15em] uppercase text-coffee-500/40 px-2">
+        <div className="w-px h-3 sm:h-4 bg-coffee-700/30 mx-0.5 sm:mx-1" />
+        <span className="hidden sm:inline text-[10px] tracking-[0.15em] uppercase text-coffee-500/40 px-2">
           Scroll to explore
         </span>
       </motion.div>

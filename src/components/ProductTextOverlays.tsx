@@ -3,10 +3,12 @@
 import { useRef } from "react";
 import { motion, useScroll, useTransform } from "motion/react";
 import { acehGayoProduct } from "@/lib/product";
+import useScreenSize from "@/hooks/useScreenSize";
 
 export default function ProductTextOverlays() {
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll();
+  const { isSmallScreen } = useScreenSize();
 
   return (
     <div
@@ -22,6 +24,7 @@ export default function ProductTextOverlays() {
           scrollRange={section.scrollRange}
           scrollYProgress={scrollYProgress}
           index={index}
+          isSmallScreen={isSmallScreen}
         />
       ))}
     </div>
@@ -35,6 +38,7 @@ interface StoryOverlayProps {
   scrollRange: [number, number];
   scrollYProgress: ReturnType<typeof useScroll>["scrollYProgress"];
   index: number;
+  isSmallScreen: boolean;
 }
 
 function StoryOverlay({
@@ -44,6 +48,7 @@ function StoryOverlay({
   scrollRange,
   scrollYProgress,
   index,
+  isSmallScreen,
 }: StoryOverlayProps) {
   const [start, end] = scrollRange;
   const fadeInStart = start;
@@ -69,20 +74,41 @@ function StoryOverlay({
     [0.95, 1, 1, 0.98]
   );
 
-  // Alternate layout: even on left, odd on right
-  const isLeft = index % 2 === 0;
+  // On small screens: always center. On desktop: alternate left/right
+  const isLeft = isSmallScreen ? false : index % 2 === 0;
+  const isCentered = isSmallScreen;
 
   return (
     <motion.div
       style={{ opacity, y, scale }}
       className={`fixed top-0 left-0 right-0 bottom-0 flex items-center ${
-        isLeft ? "justify-start" : "justify-end"
-      } px-8 md:px-16 lg:px-24`}
+        isCentered
+          ? "justify-center"
+          : isLeft
+          ? "justify-start"
+          : "justify-end"
+      } px-5 sm:px-8 md:px-16 lg:px-24`}
     >
-      <div className={`max-w-lg ${isLeft ? "text-left" : "text-right"}`}>
+      <div
+        className={`${
+          isSmallScreen ? "max-w-sm text-center" : "max-w-lg"
+        } ${!isCentered ? (isLeft ? "text-left" : "text-right") : ""}`}
+        style={
+          isSmallScreen
+            ? {
+                background: "rgba(26, 14, 10, 0.55)",
+                backdropFilter: "blur(8px)",
+                WebkitBackdropFilter: "blur(8px)",
+                borderRadius: "1rem",
+                padding: "1.5rem",
+                border: "1px solid rgba(201, 168, 76, 0.1)",
+              }
+            : {}
+        }
+      >
         {/* Subtitle */}
         <motion.p
-          className="text-xs md:text-sm tracking-[0.3em] uppercase mb-4"
+          className="text-xs sm:text-sm tracking-[0.3em] uppercase mb-3 sm:mb-4"
           style={{
             color: "#c9a84c",
             opacity,
@@ -93,7 +119,7 @@ function StoryOverlay({
 
         {/* Title */}
         <h2
-          className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6"
+          className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-4 sm:mb-6"
           style={{
             color: "#f5efe8",
             textShadow: "0 2px 30px rgba(0,0,0,0.6)",
@@ -104,7 +130,9 @@ function StoryOverlay({
 
         {/* Divider */}
         <div
-          className={`h-px w-16 mb-6 ${isLeft ? "" : "ml-auto"}`}
+          className={`h-px w-12 sm:w-16 mb-4 sm:mb-6 ${
+            isCentered ? "mx-auto" : isLeft ? "" : "ml-auto"
+          }`}
           style={{
             background:
               "linear-gradient(90deg, #c9a84c, transparent)",
@@ -113,7 +141,7 @@ function StoryOverlay({
 
         {/* Description */}
         <p
-          className="text-base md:text-lg leading-relaxed"
+          className="text-sm sm:text-base md:text-lg leading-relaxed"
           style={{
             color: "rgba(212, 184, 150, 0.85)",
             textShadow: "0 1px 20px rgba(0,0,0,0.5)",
