@@ -1,0 +1,91 @@
+@import "tailwindcss";
+
+@theme {
+  --color-coffee-900: #1a0e0a;
+  --color-coffee-800: #2d1810;
+  --color-coffee-700: #3d2216;
+  --color-coffee-600: #5c3a2a;
+  --color-coffee-500: #7a4f3a;
+  --color-coffee-400: #a06b4a;
+  --color-coffee-300: #c4956e;
+  --color-coffee-200: #d4b896;
+  --color-coffee-100: #e8d5be;
+  --color-coffee-50: #f5efe8;
+  --color-gold-500: #c9a84c;
+  --color-gold-400: #d4b85c;
+  --color-gold-300: #e0ca7a;
+  --color-amber-warm: #d4a054;
+  --color-crema: #f0e0c8;
+  --font-outfit: var(--font-outfit-variable);
+}
+
+:root {
+  --coffee-gradient: linear-gradient(
+    180deg,
+    #1a0e0a 0%,
+    #2d1810 25%,
+    #3d2216 50%,
+    #5c3a2a 75%,
+    #7a4f3a 100%
+  );
+}
+
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--coffee-gradient);
+  font-family: var(--font-outfit), system-ui, sans-serif;
+  color: #f5efe8;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background-color: #c9a84c;
+  color: #ffffff;
+}
+
+::-moz-selection {
+  background-color: #c9a84c;
+  color: #ffffff;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a0e0a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #c9a84c, #d4a054);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #d4b85c, #e0ca7a);
+}
+
+/* Firefox scrollbar */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: #c9a84c #1a0e0a;
+}
+
+/* Canvas reset */
+canvas {
+  display: block;
+}

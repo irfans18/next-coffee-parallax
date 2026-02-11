@@ -1,0 +1,27 @@
+# Next.js build output
+.next/
+out/
+
+# Dependencies
+node_modules/
+
+# Environment files
+.env.local
+.env.*.local
+
+# TypeScript declaration file
+next-env.d.ts
+
+# Optional: VS Code settings
+.vscode/
+
+# Optional: miscellaneous
+.DS_Store
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+(p)npm-shrinkwrap.json
+
+coffee/
