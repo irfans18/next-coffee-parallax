@@ -20,6 +20,7 @@ export interface StorySection {
   subtitle: string;
   description: string;
   scrollRange: [number, number]; // [start, end] of 0-1 scroll progress
+  scrollRangeOverride: [number, number]; // [start, end] of 0-1 scroll progress
 }
 
 export const acehGayoProduct: CoffeeProduct = {
@@ -43,7 +44,8 @@ export const acehGayoProduct: CoffeeProduct = {
       subtitle: "Aceh Gayo, Sumatra",
       description:
         "At 1,400 meters above sea level, volcanic soil meets tropical rain. The Gayo highlands of Aceh nurture each cherry with the patience of centuries — where every bean inherits the spirit of the land.",
-      scrollRange: [0.05, 0.22],
+      scrollRange: [0.05, 0.20],
+      scrollRangeOverride: [0.05, 0.15],
     },
     {
       id: "craft",
@@ -51,7 +53,8 @@ export const acehGayoProduct: CoffeeProduct = {
       subtitle: "Wet-Hulled Tradition",
       description:
         "Harvested by hand. Wet-hulled in the ancient Giling Basah method. Slow-roasted to a medium-dark perfection — unlocking layers of complexity that only patience can reveal.",
-      scrollRange: [0.25, 0.42],
+      scrollRange: [0.23, 0.38],
+      scrollRangeOverride: [0.17, 0.27],
     },
     {
       id: "aroma",
@@ -59,7 +62,8 @@ export const acehGayoProduct: CoffeeProduct = {
       subtitle: "A Symphony of Earth & Sweetness",
       description:
         "Dark chocolate meets cedar wood. Tropical fruit dances with brown sugar. Each sip is a meditation — warm, full-bodied, and endlessly layered.",
-      scrollRange: [0.50, 0.67],
+      scrollRange: [0.41, 0.52],
+      scrollRangeOverride: [0.30, 0.55],
     },
     {
       id: "brewed",
@@ -67,7 +71,8 @@ export const acehGayoProduct: CoffeeProduct = {
       subtitle: "From Origin to Cup",
       description:
         "The journey ends where flavor begins. Pour, steep, and savor — a cup that carries the highlands of Gayo, the hands of farmers, and the craft of generations.",
-      scrollRange: [0.70, 0.97],
+      scrollRange: [0.55, 0.70],
+      scrollRangeOverride: [0.41, 0.51], // bit useless because this item will be cut off
     },
   ],
 };

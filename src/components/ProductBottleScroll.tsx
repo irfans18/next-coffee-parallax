@@ -12,15 +12,21 @@ interface ProductBottleScrollProps {
 export default function ProductBottleScroll({
   onProgressChange,
 }: ProductBottleScrollProps) {
+  // Progressive loading state
+  const BATCH_SIZE = 30; // Initial batch size for quick start
+  const [loadedCount, setLoadedCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imagesRef = useRef<HTMLImageElement[]>([]);
   const loadedCountRef = useRef(0);
   const currentFrameRef = useRef(0);
   const rafRef = useRef<number | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadProgress, setLoadProgress] = useState(0);
   const prevSmallScreenRef = useRef<boolean | null>(null);
+  
+  // Track which frames are actually usable
+  const framesLoadedRef = useRef<boolean[]>(new Array(TOTAL_FRAMES).fill(false));
 
   const { isSmallScreen } = useScreenSize();
 
@@ -42,7 +48,36 @@ export default function ProductBottleScroll({
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
 
-      const img = imagesRef.current[index];
+      // Find the nearest loaded frame if current isn't loaded
+      // Prefer current, then look backwards.
+      let drawIndex = index;
+      
+      // If exact frame not loaded, find nearest preceding loaded frame
+      if (!framesLoadedRef.current[index]) {
+        let found = false;
+        // Look backwards first
+        for (let i = index - 1; i >= 0; i--) {
+          if (framesLoadedRef.current[i]) {
+            drawIndex = i;
+            found = true;
+            break;
+          }
+        }
+        // If no backward frame, look forward (only at start)
+        if (!found) {
+           for (let i = index + 1; i < TOTAL_FRAMES; i++) {
+            if (framesLoadedRef.current[i]) {
+              drawIndex = i;
+              found = true;
+              break;
+            }
+           }
+        }
+        // If still nothing, we can't draw (or just keep canvas as is)
+        if (!found) return; 
+      }
+
+      const img = imagesRef.current[drawIndex];
       if (!img || !img.complete || !img.naturalWidth) return;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -81,46 +116,97 @@ export default function ProductBottleScroll({
     [isSmallScreen]
   );
 
-  // Preload images — re-run when screen size category changes
+  // Validation & cleanup on screen size change
+  // When screen size changes, we need to restart loading from scratch because URL changes
   useEffect(() => {
     // Only reload if the screen size category actually changed
-    if (prevSmallScreenRef.current === isSmallScreen) return;
+    if (prevSmallScreenRef.current === isSmallScreen && imagesRef.current.length > 0) return;
     prevSmallScreenRef.current = isSmallScreen;
 
+    // Reset everything
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    imagesRef.current = new Array(TOTAL_FRAMES).fill(null);
+    framesLoadedRef.current = new Array(TOTAL_FRAMES).fill(false);
     loadedCountRef.current = 0;
+    
     setIsLoading(true);
-    setLoadProgress(0);
+    setLoadedCount(0);
 
-    const images: HTMLImageElement[] = [];
+    // Progressive Loading Strategy
+    // 1. Load critical batch (0-BATCH_SIZE)
+    // 2. Once done, hide loader
+    // 3. Continue loading rest in background
 
-    for (let i = 0; i < TOTAL_FRAMES; i++) {
-      const img = new Image();
-      img.src = getFramePath(i, isSmallScreen);
-      img.onload = () => {
-        loadedCountRef.current++;
-        setLoadProgress(
-          Math.floor((loadedCountRef.current / TOTAL_FRAMES) * 100)
-        );
-        if (loadedCountRef.current === TOTAL_FRAMES) {
-          setIsLoading(false);
-          renderFrame(0);
-        }
-      };
-      img.onerror = () => {
-        loadedCountRef.current++;
-        setLoadProgress(
-          Math.floor((loadedCountRef.current / TOTAL_FRAMES) * 100)
-        );
-        if (loadedCountRef.current === TOTAL_FRAMES) {
-          setIsLoading(false);
-        }
-      };
-      images.push(img);
-    }
+    let isCancelled = false;
+    
+    const loadImage = (index: number): Promise<void> => {
+      return new Promise((resolve) => {
+        if (isCancelled) return resolve();
+        
+        const img = new Image();
+        img.src = getFramePath(index, isSmallScreen);
+        img.onload = () => {
+          if (isCancelled) return;
+          imagesRef.current[index] = img;
+          framesLoadedRef.current[index] = true;
+          loadedCountRef.current++;
+          
+          // Optimization: Only triggers re-renders for:
+          // 1. Unlocking the UI (first BATCH_SIZE frames)
+          // 2. Periodic updates for the rest (every 5 frames) to avoid 142+ re-renders
+          if (loadedCountRef.current <= BATCH_SIZE || loadedCountRef.current % 5 === 0 || loadedCountRef.current === TOTAL_FRAMES) {
+             setLoadedCount(loadedCountRef.current);
+          }
 
-    imagesRef.current = images;
+          resolve();
+        };
+        img.onerror = () => {
+          // even on error we mark as "processed" to continue queue
+          if (isCancelled) return;
+          loadedCountRef.current++;
+          // Force update on error to keep progress moving visually
+          setLoadedCount(loadedCountRef.current); 
+          resolve(); 
+        };
+      });
+    };
+
+    const loadBatch = async (start: number, end: number) => {
+      // Create array of promises for this batch
+      const promises: Promise<void>[] = [];
+      for (let i = start; i < end && i < TOTAL_FRAMES; i++) {
+        promises.push(loadImage(i));
+      }
+      await Promise.all(promises);
+    };
+
+    const runSequence = async () => {
+      // 1. Critical Batch
+      await loadBatch(0, BATCH_SIZE);
+      
+      if (isCancelled) return;
+
+      // Unlock UI immediately after critical batch
+      setIsLoading(false);
+      
+      // Render first frame immediately
+      renderFrame(0);
+
+      // 2. Background Load Rest
+      // Process in smaller chunks to yield to main thread if needed
+      const CHUNK = 20;
+      for (let i = BATCH_SIZE; i < TOTAL_FRAMES; i += CHUNK) {
+        if (isCancelled) break;
+        // Small delay to let UI breathe if needed? maybe not needed for promises but good practice
+        // await new Promise(r => setTimeout(r, 0)); 
+        await loadBatch(i, i + CHUNK);
+      }
+    };
+
+    runSequence();
 
     return () => {
+      isCancelled = true;
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, [isSmallScreen, renderFrame]);
@@ -188,8 +274,8 @@ export default function ProductBottleScroll({
               <div className="h-0.5 bg-coffee-800 rounded-full overflow-hidden">
                 <div
                   className="h-full rounded-full transition-all duration-300 ease-out"
-                  style={{
-                    width: `${loadProgress}%`,
+                    style={{
+                    width: `${Math.min(100, Math.floor((loadedCount / BATCH_SIZE) * 100))}%`,
                     background:
                       "linear-gradient(90deg, #c9a84c, #d4a054)",
                   }}
@@ -197,7 +283,7 @@ export default function ProductBottleScroll({
               </div>
             </div>
             <p className="text-xs tracking-[0.3em] uppercase text-coffee-400/60">
-              Loading experience {loadProgress}%
+              Loading experience {Math.min(100, Math.floor((loadedCount / BATCH_SIZE) * 100))}%
             </p>
           </div>
         )}

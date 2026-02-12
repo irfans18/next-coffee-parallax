@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 import { motion, useScroll, useTransform } from "motion/react";
 import { acehGayoProduct } from "@/lib/product";
 import useScreenSize from "@/hooks/useScreenSize";
@@ -9,13 +9,25 @@ export default function ProductTextOverlays() {
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll();
   const { isSmallScreen } = useScreenSize();
+  const {isMobile} = useScreenSize();
+
+  const storySections = useMemo(() => {
+    if (isMobile || isSmallScreen) {
+      return acehGayoProduct.story.slice(0, -1).map((section) => ({
+      // return acehGayoProduct.story.map((section) => ({
+        ...section,
+        scrollRange: section.scrollRangeOverride,
+      }));
+    }
+    return acehGayoProduct.story;
+  }, [isMobile, isSmallScreen]);
 
   return (
     <div
       ref={containerRef}
       className="absolute inset-0 z-10 pointer-events-none"
     >
-      {acehGayoProduct.story.map((section, index) => (
+      {storySections.map((section, index) => (
         <StoryOverlay
           key={section.id}
           title={section.title}
